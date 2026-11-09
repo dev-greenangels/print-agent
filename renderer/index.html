@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'"
+    />
+    <title>Green Angels Print Agent</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7f4;
+        --card: #fff;
+        --ink: #1b2e1f;
+        --muted: #5b6b5f;
+        --line: #d7e0d8;
+        --accent: #2d6a4f;
+        --danger: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: linear-gradient(180deg, #e8f0ea, var(--bg));
+        color: var(--ink);
+      }
+      main {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        gap: 14px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        display: grid;
+        gap: 10px;
+      }
+      label {
+        display: grid;
+        gap: 4px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 9px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        font-size: 14px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 9px 12px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.08s ease, filter 0.08s ease, opacity 0.15s ease;
+      }
+      button:hover:not(:disabled) {
+        filter: brightness(1.05);
+      }
+      button:active:not(:disabled) {
+        transform: translateY(1px) scale(0.98);
+        filter: brightness(0.92);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button.secondary {
+        background: #e7eee8;
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+      button.secondary.primary-outline {
+        background: #fff;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+      button.danger {
+        background: var(--danger);
+        color: #fff;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #999;
+      }
+      .dot.ok {
+        background: #1f9d55;
+      }
+      .dot.warn {
+        background: #d97706;
+      }
+      .dot.err {
+        background: var(--danger);
+      }
+      .logs {
+        max-height: 180px;
+        overflow: auto;
+        font-size: 12px;
+        display: grid;
+        gap: 6px;
+      }
+      .log {
+        border-top: 1px solid var(--line);
+        padding-top: 6px;
+      }
+      .log.ok {
+        color: #1f7a40;
+      }
+      .log.bad {
+        color: var(--danger);
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .err {
+        color: var(--danger);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div>
+        <h1>Green Angels Print Agent</h1>
+        <div class="sub">Друк TTN (Packeta PDF) і рослинних етикеток через Nest SSE</div>
+      </div>
+
+      <section class="card">
+        <div class="status">
+          <span id="sseDot" class="dot"></span>
+          <span id="sseLabel">disconnected</span>
+        </div>
+        <div class="hint" id="agentMeta">Не зареєстровано</div>
+      </section>
+
+      <section class="card" id="registerCard">
+        <strong id="registerTitle">Реєстрація</strong>
+        <label
+          >URL Nest API
+          <input id="apiUrl" placeholder="https://api.example.com" />
+        </label>
+        <label id="codeLabel"
+          >Код привʼязки з бекофісу
+          <input id="code" placeholder="ABCD1234…" />
+        </label>
+        <label
+          >Назва цього ПК
+          <input id="name" placeholder="Склад SK — каса 1" />
+        </label>
+        <div class="row" id="registerActions">
+          <button id="registerBtn">Зареєструвати</button>
+          <button class="secondary" id="reregisterBtn" hidden>Перереєструвати</button>
+        </div>
+        <div class="hint" id="registeredHint" hidden>
+          Агент уже зареєстровано. Щоб змінити ПК/секрет — «Перереєструвати» (новий код) або «Відʼєднати».
+        </div>
+        <div class="err" id="registerErr"></div>
+      </section>
+
+      <section class="card">
+        <strong>Принтери / ролі</strong>
+        <label
+          >TTN / carrier-label
+          <select id="printerCarrier"></select>
+        </label>
+        <label
+          >Рослинні / plant-label
+          <select id="printerPlant"></select>
+        </label>
+        <label class="row" style="align-items: center; grid-template-columns: none">
+          <input id="openAtLogin" type="checkbox" style="width: auto" />
+          Автозапуск з системою
+        </label>
+        <div class="row">
+          <button id="saveBtn">Зберегти</button>
+          <button class="secondary primary-outline" id="testCarrier">Test TTN printer</button>
+          <button class="secondary primary-outline" id="testPlant">Test plant printer</button>
+          <button class="secondary" id="drainBtn">Забрати pending</button>
+          <button class="danger" id="disconnectBtn">Відʼєднати</button>
+        </div>
+        <div class="hint">
+          macOS: якщо друк не йде — перевірте дозволи Printer / Full Disk у System Settings.
+        </div>
+      </section>
+
+      <section class="card">
+        <strong>Останні jobs</strong>
+        <div class="logs" id="logs"></div>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>

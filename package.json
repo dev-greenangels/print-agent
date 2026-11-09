@@ -1,0 +1,64 @@
+{
+  "name": "green-angels-print-agent",
+  "version": "0.1.0",
+  "description": "Green Angels warehouse Print Agent (TTN + plant labels)",
+  "main": "dist/main.js",
+  "author": "Green Angels",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && electron .",
+    "dev": "tsc -p tsconfig.json && electron .",
+    "pack:win": "npm run build && electron-builder --win --x64",
+    "pack:mac": "npm run build && electron-builder --mac",
+    "pack:linux": "npm run build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.greenangels.printagent",
+    "productName": "Green Angels Print Agent",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "icon": "build/icon.png",
+    "files": [
+      "dist/**/*",
+      "renderer/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "pdf-to-printer": "^5.6.0"
+  }
+}
